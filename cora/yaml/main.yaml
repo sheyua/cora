@@ -1,0 +1,59 @@
+Logging:
+  level: INFO
+  tee: True
+  formatter: '%(asctime)s-%(levelname)s : %(message)s'
+Environment:
+  Override:
+    ROOTDIR: $HOME/proj/test
+DataFeed:
+  MarketData:
+    filename: '$ROOTDIR/security_reference_data_w_ret1d.zip'
+  Vendor:
+    filename: '$ROOTDIR/data_sets.zip'
+  AssetData:
+    filename: '$ROOTDIR/risk_factors.zip'
+  RiskModel:
+    filename: '$ROOTDIR/derived/bod/{content}/{event_date}.parquet.gz'
+  TradeModel:
+    filename: '$ROOTDIR/derived/bod/{content}/{event_date}.{extension}'
+  BegOfDay:
+    filename: '$ROOTDIR/derived/bod/{content}/{event_date}.parquet.gz'
+  EndOfDay:
+    filename: '$ROOTDIR/derived/eod/{content}/{data_date}.parquet.gz'
+
+
+State:
+  start_date: 20120103
+  end_date: 20171229
+  composite_exchange: NYSE
+  num_worker: 1
+  main: TradeModelEval, TradeModelApply, PortfolioEval
+
+
+TradeModelEval:
+  module_name: job.trademodeleval
+  signal_feed: 'signal/fundamental, signal/flow, signal/zscore'
+  linear_shrinkage: 0.5 # linear shrinkage to (unit variance) equal weight
+  linear_prior_adjust:
+    z9: 1.
+  search_params:
+    num_leaves:
+      - 5
+      - 10
+    max_depth:
+      - 5
+    learning_rate:
+      - 0.005
+TradeModelApply:
+  module_name: job.trademodelapply
+  eval_section: TradeModelEval
+  non_linear_shrinkage: 0.8 # non linear shrinkage to zero
+PortfolioEval:
+  module_name: job.portfolioeval
+  signal_feed: 'alpha'
+  apply_clipping: 'True'
+  risk_rolling_window: 252
+  risk_rolling_halflife: 126
+  trade_smooth_window: 5
+  trade_smooth_halflife: 2
+  dirname: '$ROOTDIR/derived/cp/{signal_name}/{speed}'

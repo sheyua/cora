@@ -1,0 +1,62 @@
+Logging:
+  level: INFO
+  tee: True
+  formatter: '%(asctime)s-%(levelname)s : %(message)s'
+Environment:
+  Override:
+    ROOTDIR: $HOME/proj/test
+DataFeed:
+  MarketData:
+    filename: '$ROOTDIR/security_reference_data_w_ret1d.zip'
+  Vendor:
+    filename: '$ROOTDIR/data_sets.zip'
+  AssetData:
+    filename: '$ROOTDIR/risk_factors.zip'
+  RiskModel:
+    filename: '$ROOTDIR/derived/bod/{content}/{event_date}.parquet.gz'
+  TradeModel:
+    filename: '$ROOTDIR/derived/bod/{content}/{event_date}.{extension}'
+  BegOfDay:
+    filename: '$ROOTDIR/derived/bod/{content}/{event_date}.parquet.gz'
+  EndOfDay:
+    filename: '$ROOTDIR/derived/eod/{content}/{data_date}.parquet.gz'
+
+
+State:
+  start_date: 20100401
+  end_date: 20171229
+  composite_exchange: NYSE
+  num_worker: 1
+  main: RiskModelEval, DailyDataEval, EstimateEval, TechnicalEval, FundamentalEval, FlowEval, ZScoreEval, PortfolioEval
+
+
+RiskModelEval:
+  module_name: job.riskmodeleval
+DailyDataEval:
+  module_name: job.dailydataeval
+EstimateEval:
+  module_name: job.estimateeval
+TechnicalEval:
+  module_name: job.technicaleval
+FundamentalEval:
+  module_name: job.fundamentaleval
+  include_data_set: '1, 2, 3, 4, 5, 6, 7'
+  invert_sign: '6, 7'
+FlowEval:
+  module_name: job.floweval
+  include_data_set: '8'
+  invert_sign: '9'
+ZScoreEval:
+  module_name: job.zscoreeval
+  include_data_set: '9, 10, 11'
+  invert_sign: '9'
+  zscore_window: 10
+PortfolioEval:
+  module_name: job.portfolioeval
+  signal_feed: 'signal/technical, signal/fundamental, signal/flow, signal/zscore'
+  apply_clipping: 'True, False, True, True'
+  risk_rolling_window: 252
+  risk_rolling_halflife: 126
+  trade_smooth_window: 5
+  trade_smooth_halflife: 2
+  dirname: '$ROOTDIR/derived/cp/{signal_name}/{speed}'
